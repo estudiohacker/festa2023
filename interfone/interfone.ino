@@ -9,6 +9,7 @@
 
 #include "settings.h"
 #include "version.h"
+#include "conn.h"
 
 const unsigned short int num_interruptores = 12;
 const unsigned short int interruptores[num_interruptores] = {13, 18, 14, 22, 34, 35, 32, 33, 25, 26, 27, 23};
@@ -19,6 +20,8 @@ const unsigned short int posicoes[num_posicoes] = {15, 2, 4, 16};
 unsigned long previousMillis = 0;
 const unsigned long intervalo = 50;
 
+Conn* conn;
+
 void setup() {
   pinMode(LED_STATUS_PIN, OUTPUT);
   digitalWrite(LED_STATUS_PIN, HIGH);
@@ -28,6 +31,8 @@ void setup() {
   Serial.println();
   Serial.print(HEADER);
   Serial.println(version_info());
+
+  conn = new Conn();
 
   for (uint8_t i = 0; i < num_interruptores; i++) {
     pinMode(interruptores[i], INPUT_PULLUP);
@@ -70,17 +75,14 @@ uint8_t posicao_chave(uint8_t pino) {
 }
 
 void loop() {
+  conn->loop();
+  
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= intervalo) {
     previousMillis = currentMillis;
 
-    Serial.print("Interruptores ");
     for (uint8_t i = 0; i < num_interruptores; i++) {
-      Serial.print(i+1);
-      Serial.print(":");
-      Serial.print(posicao_chave(interruptores[i]));
-      Serial.print(" ");
+      conn->notify_sensor("chave/" + String(i+1), posicao_chave(interruptores[i]));
     }
-    Serial.println();
   }
 }
