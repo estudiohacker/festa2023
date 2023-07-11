@@ -6,6 +6,10 @@
  * porém isso exigiria guardarmos os valores para posterior visualização.
  *
  */
+
+#include "settings.h"
+#include "version.h"
+
 const unsigned short int num_interruptores = 12;
 const unsigned short int interruptores[num_interruptores] = {13, 18, 14, 22, 34, 35, 32, 33, 25, 26, 27, 23};
 
@@ -16,7 +20,14 @@ unsigned long previousMillis = 0;
 const unsigned long intervalo = 50;
 
 void setup() {
+  pinMode(LED_STATUS_PIN, OUTPUT);
+  digitalWrite(LED_STATUS_PIN, HIGH);
+
   Serial.begin(115200);
+  Serial.println();
+  Serial.println();
+  Serial.print(HEADER);
+  Serial.println(version_info());
 
   for (uint8_t i = 0; i < num_interruptores; i++) {
     pinMode(interruptores[i], INPUT_PULLUP);
@@ -25,6 +36,9 @@ void setup() {
   for (uint8_t i = 0; i < num_posicoes; i++) {
     pinMode(posicoes[i], OUTPUT);
   }
+
+  Serial.println(F("Monitoring..."));
+  digitalWrite(LED_STATUS_PIN, LOW);  
 }
 
 bool test_posicao_chave(uint8_t pino, bool valor1, bool valor2, bool valor3, bool valor4) {
