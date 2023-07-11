@@ -4,17 +4,17 @@
 
 #define DEBUG
 
-static const char* HOSTNAME_PREFIX = "interfone";
+#define HOSTNAME_PREFIX "interfone"
 
-static const char* WIFI_SSID = "I9";
-static const char* WIFI_PASSWORD = "12345678";
-static const uint8_t WIFI_CONNECTION_RETRIES = 20;
+#define WIFI_SSID "I9"
+#define WIFI_PASSWORD "12345678"
+#define WIFI_CONNECTION_RETRIES 20
 
-static const unsigned long MQTT_CONNECTION_RETRY = 60000;
-static const char* MQTT_SERVER = "interfone.local";
-static const uint16_t MQTT_PORT = 1883;
-static const char* MQTT_USER = "";
-static const char* MQTT_PASSWORD = "";
-static const char* MQTT_TOPIC_PREFIX = "";
+#define MQTT_CONNECTION_RETRY 60000
+#define MQTT_SERVER "interfone.local"
+#define MQTT_PORT 1883
+#define MQTT_USER ""
+#define MQTT_PASSWORD ""
+#define MQTT_TOPIC_PREFIX ""
 
-static const uint8_t LED_STATUS_PIN = 2;
+#define LED_STATUS_PIN 2

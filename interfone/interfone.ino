@@ -1,5 +1,7 @@
 /*
- * Autor: João Adriano Freitas <jaafreitas@gmail.com>
+ * Autores
+ *  João Adriano Freitas <jaafreitas@gmail.com>
+ *  Allan Moreira <allan.moreira@gmail.com>
  *
  * No algorítmo atual, estamos verificando a posição dos interruptores um a um.
  * A forma mais eficiente seria para cada posição possível, fazer a leitura de todos os interruptores,

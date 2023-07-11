@@ -8,9 +8,7 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WebServer.h>
-#include <ESPmDNS.h>
 #include <Update.h>
-#include <EEPROM.h>
 #include "version.h"
 
 WebServer server(80);

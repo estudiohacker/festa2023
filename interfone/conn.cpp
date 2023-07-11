@@ -73,7 +73,7 @@ String Conn::fullTopic(String topic) {
 }
 
 void Conn::notify_topic(String topic, String payload, bool retained) {
-  debugMsg("-> %s: %s\n", fullTopic(topic).c_str(), payload.c_str());
+  debugMsg("%s: %s\n", fullTopic(topic).c_str(), payload.c_str());
   digitalWrite(LED_STATUS_PIN, LOW);
   this->_PubSubClient->publish(fullTopic(topic).c_str(), payload.c_str(), retained);
   digitalWrite(LED_STATUS_PIN, HIGH);
