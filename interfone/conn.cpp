@@ -2,6 +2,7 @@
 #include "settings.h"
 #include "debug.h"
 #include "conn.h"
+#include "ota.h"
 #include "version.h"
 
 WiFiClient wifiClient;
@@ -38,6 +39,7 @@ Conn::Conn() {
   this->_hostname = String(HOSTNAME_PREFIX) + String(this->_id);
 
   setupWiFi(this->_hostname.c_str());
+  setupOTA();
 
   this->_PubSubClient = new PubSubClient(wifiClient);
   this->_PubSubClient->setServer(MQTT_SERVER, MQTT_PORT);
@@ -61,6 +63,7 @@ void Conn::connect() {
 };
 
 void Conn::loop() {
+  loopOTA();
   this->connect();
   this->_PubSubClient->loop();
 }

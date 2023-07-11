@@ -128,3 +128,4 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+interfone/interfone.ino.doitESP32devkitV1.bin
