@@ -7,10 +7,10 @@
  *
  */
 const unsigned short int num_interruptores = 12;
-const unsigned short int interruptores[num_interruptores] = {10, 11, 12, 9, 8, 7, 6, 5, 4, 3, 2, 13};
+const unsigned short int interruptores[num_interruptores] = {13, 18, 14, 22, 34, 35, 32, 33, 25, 26, 27, 23};
 
 const unsigned short int num_posicoes = 4;
-const unsigned short int posicoes[num_posicoes] = {A0, A1, A2, A3};
+const unsigned short int posicoes[num_posicoes] = {15, 2, 4, 16};
 
 unsigned long previousMillis = 0;
 const unsigned long intervalo = 50;
