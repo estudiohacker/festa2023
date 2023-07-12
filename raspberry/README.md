@@ -1,2 +1,2 @@
-#Instalar
-##pip install python-vlc
+# Instalar
+## pip install python-vlc
