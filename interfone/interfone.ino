@@ -15,6 +15,7 @@
 
 const unsigned short int num_interruptores = 12;
 const unsigned short int interruptores[num_interruptores] = {13, 18, 14, 22, 34, 35, 32, 33, 25, 26, 27, 23};
+unsigned short int interruptores_estado[num_interruptores] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 const unsigned short int num_posicoes = 4;
 const unsigned short int posicoes[num_posicoes] = {15, 2, 4, 16};
@@ -84,7 +85,12 @@ void loop() {
     previousMillis = currentMillis;
 
     for (uint8_t i = 0; i < num_interruptores; i++) {
-      conn->notify_sensor("chave/" + String(i+1), posicao_chave(interruptores[i]));
+      if (posicao_chave(interruptores[i]) != interruptores_estado[i]) {
+        if (interruptores_estado[i] != 0) {
+          conn->notify_sensor("chave/" + String(i+1), posicao_chave(interruptores[i]));
+        };
+        interruptores_estado[i] = posicao_chave(interruptores[i]);
+      };
     }
   }
 }
