@@ -1,12 +1,14 @@
 # python3.6
 
 import random
+import keyboard
 import vlc
 import time
 from paho.mqtt import client as mqtt_client
 # create a new instance of the media player
 player = vlc.MediaPlayer()
-player.set_fullscreen(False)
+player.set_fullscreen(True)
+keyboard.add_hotkey("Esc", lambda: player.stop())
 
 loop = True
 broker = '172.17.77.172'
