@@ -1,6 +1,6 @@
-= Setting up the TFT_eSPI Library
+# Setting up the TFT_eSPI Library
 
-== User_Setup.h
+## User_Setup.h
 
 On line 45 comment out (i.e. add “//” in front of the text) the line defining the ILI9341 driver.
 On line 65 uncomment (i.e. remove the “//”) the line defining the GC9A01 driver.
@@ -21,5 +21,5 @@ On line 211 set RST to 4.
 #define TFT_RST   4  // Reset pin (could connect to RST pin)
 #define SPI_FREQUENCY  80000000
 
-= Reference
+# Reference
 https://dronebotworkshop.com/gc9a01/
