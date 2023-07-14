@@ -1,6 +1,6 @@
 
-// This example renders a png file that is stored in a FLASH array
-// using the PNGdec library (available via library manager).
+// Renders a png file that is stored in a FLASH array
+// using the PNGdec library
 
 // Image files can be converted to arrays using the tool here:
 // https://notisrac.github.io/FileToCArray/
@@ -12,11 +12,10 @@
 //   5. Open the sketch in IDE
 //   6. Include the header file containing the array (imagem.h in this example)
 
-// Include the PNG decoder library
 #include <PNGdec.h>
-#include "imagem.h" // Image is stored here in an 8 bit array
+#include "imagem.h"
 
-PNG png; // PNG decoder inatance
+PNG png;
 
 #define MAX_IMAGE_WDITH 240 // Adjust for your images
 
