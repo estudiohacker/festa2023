@@ -4,7 +4,8 @@
 #include "GifClass.h"
 
 #define PNG_FILENAME "/laroye.png"
-#define GIF_FILENAME "/laroye.gif"
+#define FILE_LAROYE "/laroye.gif"
+#define FILE_GLOBE "/ezgif.com-optimize.gif"
 
 /*******************************************************************************
    Arduino_GFX try to find the settings depends on selected board in Arduino IDE
@@ -14,16 +15,18 @@
 #define GFX_BL DF_GFX_BL // default backlight pin, you may replace DF_GFX_BL to actual backlight pin
 
 /* More data bus class: https://github.com/moononournation/Arduino_GFX/wiki/Data-Bus-Class */
-Arduino_DataBus *bus = create_default_Arduino_DataBus();
+Arduino_DataBus *busVSPI = new Arduino_ESP32SPI(21 /* DC */,  5 /* CS */, 18 /* SCK */, 23 /* MOSI */, GFX_NOT_DEFINED /* MISO */, VSPI /* spi_num */);
+Arduino_DataBus *busHSPI = new Arduino_ESP32SPI(25 /* DC */, 33 /* CS */, 14 /* SCK */, 27 /* MOSI */, GFX_NOT_DEFINED /* MISO */, HSPI /* spi_num */);
 
 /* More display class: https://github.com/moononournation/Arduino_GFX/wiki/Display-Class */
-Arduino_GFX *gfx = new Arduino_GC9A01(bus, DF_GFX_RST, 0 /* rotation */, true /* IPS */);
+Arduino_GFX *gfx = new Arduino_GC9A01(busVSPI, 22 /* RST */, 0 /* rotation */, true /* IPS */);
+Arduino_GFX *gfxPNG = new Arduino_GC9A01(busHSPI, 26 /* RST */, 0 /* rotation */, true /* IPS */);
 
 PNG png;
 File pngFile;
 static GifClass gifClass;
 
-int16_t w, h, xOffset, yOffset;
+int16_t xOffsetPNG, yOffsetPNG;
 
 void *myOpen(const char *filename, int32_t *size) {
   pngFile = SPIFFS.open(filename, "r");
@@ -61,30 +64,28 @@ void PNGDraw(PNGDRAW *pDraw) {
   uint8_t usMask[320];
   png.getLineAsRGB565(pDraw, usPixels, PNG_RGB565_LITTLE_ENDIAN, 0x00000000);
   png.getAlphaMask(pDraw, usMask, 1);
-  gfx->draw16bitRGBBitmap(xOffset, yOffset + pDraw->y, usPixels, usMask, pDraw->iWidth, 1);
+  gfxPNG->draw16bitRGBBitmap(xOffsetPNG, yOffsetPNG + pDraw->y, usPixels, usMask, pDraw->iWidth, 1);
 }
 
 void showPNG() {
-  unsigned long start = millis();
   int rc;
   rc = png.open(PNG_FILENAME, myOpen, myClose, myRead, mySeek, PNGDraw);
   if (rc == PNG_SUCCESS) {
     int16_t pw = png.getWidth();
     int16_t ph = png.getHeight();
 
-    xOffset = (w - pw) / 2;
-    yOffset = (h - ph) / 2;
+    xOffsetPNG = (gfxPNG->width() - pw) / 2;
+    yOffsetPNG = (gfxPNG->height() - ph) / 2;
 
     rc = png.decode(NULL, 0);
     png.close();
   } else {
     Serial.println("ERROR: png.open() failed!");
   }
-  Serial.printf("Time used: %lu\n", millis() - start);
 }
 
-void playGif() {
-  File gifFile = SPIFFS.open(GIF_FILENAME, "r");
+void playGif(Arduino_GFX *_gfx, const char *path) {
+  File gifFile = SPIFFS.open(path, "r");
   if (!gifFile || gifFile.isDirectory()) {
     Serial.println(F("ERROR: open gifFile Failed!"));
   } else {
@@ -97,8 +98,8 @@ void playGif() {
       if (!buf) {
         Serial.println(F("buf malloc failed!"));
       } else {
-        int16_t x = (gfx->width() - gif->width) / 2;
-        int16_t y = (gfx->height() - gif->height) / 2;
+        int16_t x = (_gfx->width() - gif->width) / 2;
+        int16_t y = (_gfx->height() - gif->height) / 2;
 
         int32_t t_fstart, t_delay = 0, t_real_delay, delay_until;
         int32_t res = 1;
@@ -110,7 +111,7 @@ void playGif() {
           if (res < 0) {
             break;
           } else if (res > 0) {
-            gfx->drawIndexedBitmap(x, y, buf, gif->palette->colors, gif->width, gif->height);
+            _gfx->drawIndexedBitmap(x, y, buf, gif->palette->colors, gif->width, gif->height);
 
             t_real_delay = t_delay - (millis() - t_fstart);
             duration += t_delay;
@@ -131,24 +132,24 @@ void playGif() {
 void setup() {
   Serial.begin(115200);
 
-  // Init Display
   if (!gfx->begin()) {
     Serial.println("gfx->begin() failed!");
   }
   gfx->fillScreen(WHITE);
-  w = gfx->width(), h = gfx->height();
 
-  pinMode(GFX_BL, OUTPUT);
-  digitalWrite(GFX_BL, HIGH);
+  if (!gfxPNG->begin()) {
+    Serial.println("gfxPNG->begin() failed!");
+  }
+  gfxPNG->fillScreen(WHITE);
 
   if (!SPIFFS.begin()) {
     Serial.println(F("ERROR: file system mount failed!"));
-  } else {
-    showPNG();
-    delay(5000);       
   }
 }
 
 void loop() {
-  playGif();
+  showPNG();
+  delay(1000);
+  playGif(gfx, FILE_GLOBE);
+  playGif(gfxPNG, FILE_LAROYE);
 }
