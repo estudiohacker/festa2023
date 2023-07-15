@@ -7,19 +7,11 @@
 #define FILE_LAROYE "/laroye.gif"
 #define FILE_GLOBE "/ezgif.com-optimize.gif"
 
-/*******************************************************************************
-   Arduino_GFX try to find the settings depends on selected board in Arduino IDE
-   Or you can define the display dev kit not in the board list
-   ESP32 various dev board     : CS:  5, DC: 27, RST: 33, BL: 22, SCK: 18, MOSI: 23, MISO: nil
- ******************************************************************************/
-#define GFX_BL DF_GFX_BL // default backlight pin, you may replace DF_GFX_BL to actual backlight pin
-
-/* More data bus class: https://github.com/moononournation/Arduino_GFX/wiki/Data-Bus-Class */
 Arduino_DataBus *busVSPI = new Arduino_ESP32SPI(21 /* DC */,  5 /* CS */, 18 /* SCK */, 23 /* MOSI */, GFX_NOT_DEFINED /* MISO */, VSPI /* spi_num */);
 Arduino_DataBus *busHSPI = new Arduino_ESP32SPI(25 /* DC */, 33 /* CS */, 14 /* SCK */, 27 /* MOSI */, GFX_NOT_DEFINED /* MISO */, HSPI /* spi_num */);
 
 /* More display class: https://github.com/moononournation/Arduino_GFX/wiki/Display-Class */
-Arduino_GFX *gfx = new Arduino_GC9A01(busVSPI, 22 /* RST */, 0 /* rotation */, true /* IPS */);
+Arduino_GFX *gfx =    new Arduino_GC9A01(busVSPI, 22 /* RST */, 0 /* rotation */, true /* IPS */);
 Arduino_GFX *gfxPNG = new Arduino_GC9A01(busHSPI, 26 /* RST */, 0 /* rotation */, true /* IPS */);
 
 PNG png;
@@ -149,7 +141,6 @@ void setup() {
 
 void loop() {
   showPNG();
-  delay(1000);
   playGif(gfx, FILE_GLOBE);
   playGif(gfxPNG, FILE_LAROYE);
 }
