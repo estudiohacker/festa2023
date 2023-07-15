@@ -6,13 +6,12 @@
 #define GFX_BUTTON_1 16
 #define GFX_BUTTON_2 13 
 
-#define PNG_FILENAME "/laroye.png"
-const char *gifFiles[] = {"/laroye.gif", "/exu2.gif", "/ezgif.com-optimize.gif"};
-const int8_t maxGifFiles = 3;
+const char *gifFiles[] = {"/exu0.gif", "/exu1.gif", "/exu2.gif", "/exu3.gif", "/exu4.gif"};
+const int8_t maxGifFiles = 5;
 int8_t currentGifFileIdx = 0;
 
-const char *pngFiles[] = {"/laroye.png", "/bluemarble.png"};
-const int8_t maxPngFiles = 2;
+const char *pngFiles[] = {"/exu0.png", "/exu1.png", "/exu2.png"};
+const int8_t maxPngFiles = 3;
 int8_t currentPngFileIdx = 0;
 
 
@@ -36,7 +35,7 @@ bool GFXButton2Pressed = false;
 void *myOpen(const char *filename, int32_t *size) {
   pngFile = SPIFFS.open(filename, "r");
   if (!pngFile || pngFile.isDirectory()) {
-    Serial.println(F("ERROR: Failed to open " PNG_FILENAME " file for reading"));
+    Serial.println(F("ERROR: Failed to open file for reading"));
   } else {
     *size = pngFile.size();
   }
