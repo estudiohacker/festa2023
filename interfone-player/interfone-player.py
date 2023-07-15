@@ -11,9 +11,9 @@ player.set_fullscreen(True)
 keyboard.add_hotkey("Esc", lambda: player.stop())
 
 loop = True
-broker = '127.0.0.1'
+broker = '172.17.77.172'
 port = 1883
-topic = "painel/chaves"
+topic = "interfone/+/sensor/chave/+"
 # Generate a Client ID with the subscribe prefix.
 client_id = f'subscribe-{random.randint(0, 100)}'
 username = 'quilombo'
@@ -35,9 +35,9 @@ def connect_mqtt() -> mqtt_client:
 def subscribe(client: mqtt_client):
     def on_message(client, userdata, msg):
         print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
-        id = int(msg.payload.decode())%15
-        print(id)
-        media = vlc.Media(str(id)+".mp4")
+        chave = msg.topic.split('/')[-1]
+        valor = int(msg.payload.decode())
+        media = vlc.Media(str(chave) + "." + str(valor) + ".jpg")
         player.set_media(media)
         player.play()
 
