@@ -21,7 +21,7 @@ const unsigned short int num_posicoes = 4;
 const unsigned short int posicoes[num_posicoes] = {15, 2, 4, 16};
 
 unsigned long previousMillis = 0;
-const unsigned long intervalo = 50;
+const unsigned long intervalo = 250;
 
 Conn* conn;
 
