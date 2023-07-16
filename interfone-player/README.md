@@ -1,2 +1,2 @@
 # Instalar
-## pip install python-vlc paho.mqtt keyboard
+## pip install python-vlc paho.mqtt
