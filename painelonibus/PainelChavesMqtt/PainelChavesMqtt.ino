@@ -6,6 +6,16 @@
 
 #define DEBUG
 
+/// Fita de led
+#include <Adafruit_NeoPixel.h>
+
+#define LED_PIN    2
+#define LED_COUNT 30
+
+// Declare our NeoPixel strip object:
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+
 const char* id = "ESP-001-Chaves";
 
 //Wifi
@@ -18,12 +28,12 @@ const char* mqttUser = "quilombo";            //user
 const char* mqttPassword = "sesc";      //password
 const int mqttPort = 1883;   //porta
 
-const char* mqttTopicSubPainel ="painel/status";
-const char* mqttTopicSubPainelChaves ="painel/chaves";
+const char* mqttTopicSubPainel = "painel/status";
+const char* mqttTopicSubPainelChaves = "painel/chaves";
 
 //Pinos de entrada para conectar as chaves
 const byte qtdeEntradas = 15;
-const byte entradas[] = {4,13,14,16,17,18,19,21,22,23,25,26,27,32,33};
+const byte entradas[] = {4, 13, 14, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33};
 short int statusEntrada = 0;
 short int statusEntradaAtual = 0;
 WiFiClient espClient;
@@ -31,9 +41,14 @@ PubSubClient client(espClient);
 
 void setup() {
 
-  for(byte i=0;i<qtdeEntradas;i++)
+  for (byte i = 0; i < qtdeEntradas; i++)
     pinMode(entradas[i], INPUT_PULLUP);
-  
+  strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
+  strip.show();            // Turn OFF all pixels ASAP
+  strip.setBrightness(200); // Set BRIGHTNESS to about 1/5 (max = 255)
+  theaterChase(strip.Color(random(0, 255), random(0, 255), random(0, 255)), 50); // White, half brightness
+
+
   Serial.begin(115200);
   Serial.println("Booting");
   WiFi.mode(WIFI_STA);
@@ -44,9 +59,9 @@ void setup() {
     ESP.restart();
   }
 
-  #ifdef DEBUG
+#ifdef DEBUG
   Serial.println("Conectado na rede WiFi");
-  #endif
+#endif
 
   // Port defaults to 3232
   // ArduinoOTA.setPort(3232);
@@ -62,30 +77,30 @@ void setup() {
   // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
 
   ArduinoOTA
-    .onStart([]() {
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH)
-        type = "sketch";
-      else // U_SPIFFS
-        type = "filesystem";
+  .onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH)
+      type = "sketch";
+    else // U_SPIFFS
+      type = "filesystem";
 
-      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-      Serial.println("Start updating " + type);
-    })
-    .onEnd([]() {
-      Serial.println("\nEnd");
-    })
-    .onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-    })
-    .onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
-    });
+    // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+    Serial.println("Start updating " + type);
+  })
+  .onEnd([]() {
+    Serial.println("\nEnd");
+  })
+  .onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  })
+  .onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
 
   ArduinoOTA.begin();
 
@@ -95,25 +110,25 @@ void setup() {
 
   client.setServer(mqttServer, mqttPort);
   client.setCallback(callback);
- 
+
   while (!client.connected()) {
-    #ifdef DEBUG
+#ifdef DEBUG
     Serial.println("Conectando ao Broker MQTT...");
-    #endif
- 
+#endif
+
     if (client.connect("ESPClientChaves", mqttUser, mqttPassword )) {
-      #ifdef DEBUG
-      Serial.println("Conectado");  
-      #endif
-      client.publish(mqttTopicSubPainel,id);
-    
+#ifdef DEBUG
+      Serial.println("Conectado");
+#endif
+      client.publish(mqttTopicSubPainel, id);
+
     } else {
-      #ifdef DEBUG 
+#ifdef DEBUG
       Serial.print("falha estado  ");
       Serial.print(client.state());
-      #endif
+#endif
       delay(2000);
- 
+
     }
   }
 }
@@ -126,14 +141,14 @@ void callback(char* topic, byte* payload, unsigned int length) {
   String strMSG = String((char*)payload);
   String strTopic = String((char*)topic);
 
-  #ifdef DEBUG
+#ifdef DEBUG
   Serial.print("Mensagem chegou do tópico: ");
   Serial.println(topic);
   Serial.print("Mensagem:");
   Serial.print(strMSG);
   Serial.println();
   Serial.println("-----------------------");
-  #endif
+#endif
 
 }
 
@@ -141,32 +156,52 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void reconect() {
   //Enquanto estiver desconectado
   while (!client.connected()) {
-    #ifdef DEBUG
+#ifdef DEBUG
     Serial.print("Tentando conectar ao servidor MQTT");
-    #endif
-     
+#endif
+
     bool conectado = strlen(mqttUser) > 0 ?
                      client.connect("ESP8266Client", mqttUser, mqttPassword) :
                      client.connect("ESP8266Client");
 
-    if(conectado) {
-      #ifdef DEBUG
+    if (conectado) {
+#ifdef DEBUG
       Serial.println("Conectado!");
-      #endif
+#endif
       //subscreve no tópico
       client.subscribe(mqttTopicSubPainel, 1); //nivel de qualidade: QoS 1
-      
-      
+
+
     } else {
-      #ifdef DEBUG
+#ifdef DEBUG
       Serial.println("Falha durante a conexão.Code: ");
       Serial.println( String(client.state()).c_str());
       Serial.println("Tentando novamente em 10 s");
-      #endif
-      //Aguarda 10 segundos 
+#endif
+      //Aguarda 10 segundos
       delay(10000);
     }
   }
+}
+
+void atualizaLuzPainel() {
+
+  if (bitRead(statusEntradaAtual, 6)){
+    colorWipe(strip.Color(random(0, 255), random(0, 255), random(0, 255)), 50); 
+    rainbow(10);             // Flowing rainbow cycle along the whole strip
+    theaterChaseRainbow(50); 
+  }
+  
+  
+  for (byte i = 0; i < qtdeEntradas; i++) {
+    if (!bitRead(statusEntradaAtual, i)) {
+      
+      strip.setPixelColor(i, random(0, 255), random(0, 255), random(0, 255));
+    }else{
+      strip.setPixelColor(i, 0, 0, 0);
+    }
+  }
+  strip.show();
 }
 
 void loop() {
@@ -176,22 +211,102 @@ void loop() {
   }
   client.loop();
 
-  Serial.println(statusEntrada,BIN);
+  Serial.println(statusEntrada, BIN);
   statusEntradaAtual = 0;
-  for(byte i=0;i<qtdeEntradas;i++)
-    bitWrite(statusEntradaAtual,i, digitalRead(entradas[i]));
+  for (byte i = 0; i < qtdeEntradas; i++)
+    bitWrite(statusEntradaAtual, i, digitalRead(entradas[i]));
 
-  if( statusEntradaAtual != statusEntrada){
-       Serial.print("Anterior:");
-       Serial.println(statusEntrada,BIN);
-       Serial.print("Atual:");
-       Serial.println(statusEntradaAtual,BIN);
-       statusEntrada = statusEntradaAtual;
-       Serial.print("Enviar:");
-       Serial.println(statusEntrada);
-       char strEntrada[5] ;
-        itoa(statusEntrada,strEntrada,10);
-       client.publish(mqttTopicSubPainelChaves, strEntrada);
+  if ( statusEntradaAtual != statusEntrada) {
+    
+    Serial.print("Anterior:");
+    Serial.println(statusEntrada, BIN);
+    Serial.print("Atual:");
+    Serial.println(statusEntradaAtual, BIN);
+    statusEntrada = statusEntradaAtual;
+    Serial.print("Enviar:");
+    Serial.println(statusEntrada);
+    char strEntrada[5] ;
+    itoa(statusEntrada, strEntrada, 10);
+    client.publish(mqttTopicSubPainelChaves, strEntrada);
+    atualizaLuzPainel();
+    
   }
   delay(200);
+}
+// Some functions of our own for creating animated effects -----------------
+
+// Fill strip pixels one after another with a color. Strip is NOT cleared
+// first; anything there will be covered pixel by pixel. Pass in color
+// (as a single 'packed' 32-bit value, which you can get by calling
+// strip.Color(red, green, blue) as shown in the loop() function above),
+// and a delay time (in milliseconds) between pixels.
+void colorWipe(uint32_t color, int wait) {
+  for (int i = 0; i < strip.numPixels(); i++) { // For each pixel in strip...
+    strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
+    strip.show();                          //  Update strip to match
+    delay(wait);                           //  Pause for a moment
+  }
+}
+
+// Theater-marquee-style chasing lights. Pass in a color (32-bit value,
+// a la strip.Color(r,g,b) as mentioned above), and a delay time (in ms)
+// between frames.
+void theaterChase(uint32_t color, int wait) {
+  for (int a = 0; a < 10; a++) { // Repeat 10 times...
+    for (int b = 0; b < 3; b++) { //  'b' counts from 0 to 2...
+      strip.clear();         //   Set all pixels in RAM to 0 (off)
+      // 'c' counts up from 'b' to end of strip in steps of 3...
+      for (int c = b; c < strip.numPixels(); c += 3) {
+        strip.setPixelColor(c, color); // Set pixel 'c' to value 'color'
+      }
+      strip.show(); // Update strip with new contents
+      delay(wait);  // Pause for a moment
+    }
+  }
+}
+
+// Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
+void rainbow(int wait) {
+  // Hue of first pixel runs 5 complete loops through the color wheel.
+  // Color wheel has a range of 65536 but it's OK if we roll over, so
+  // just count from 0 to 5*65536. Adding 256 to firstPixelHue each time
+  // means we'll make 5*65536/256 = 1280 passes through this outer loop:
+  for (long firstPixelHue = 0; firstPixelHue < 5 * 65536; firstPixelHue += 256) {
+    for (int i = 0; i < strip.numPixels(); i++) { // For each pixel in strip...
+      // Offset pixel hue by an amount to make one full revolution of the
+      // color wheel (range of 65536) along the length of the strip
+      // (strip.numPixels() steps):
+      int pixelHue = firstPixelHue + (i * 65536L / strip.numPixels());
+      // strip.ColorHSV() can take 1 or 3 arguments: a hue (0 to 65535) or
+      // optionally add saturation and value (brightness) (each 0 to 255).
+      // Here we're using just the single-argument hue variant. The result
+      // is passed through strip.gamma32() to provide 'truer' colors
+      // before assigning to each pixel:
+      strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(pixelHue)));
+    }
+    strip.show(); // Update strip with new contents
+    delay(wait);  // Pause for a moment
+  }
+}
+
+// Rainbow-enhanced theater marquee. Pass delay time (in ms) between frames.
+void theaterChaseRainbow(int wait) {
+  int firstPixelHue = 0;     // First pixel starts at red (hue 0)
+  for (int a = 0; a < 30; a++) { // Repeat 30 times...
+    for (int b = 0; b < 3; b++) { //  'b' counts from 0 to 2...
+      strip.clear();         //   Set all pixels in RAM to 0 (off)
+      // 'c' counts up from 'b' to end of strip in increments of 3...
+      for (int c = b; c < strip.numPixels(); c += 3) {
+        // hue of pixel 'c' is offset by an amount to make one full
+        // revolution of the color wheel (range 65536) along the length
+        // of the strip (strip.numPixels() steps):
+        int      hue   = firstPixelHue + c * 65536L / strip.numPixels();
+        uint32_t color = strip.gamma32(strip.ColorHSV(hue)); // hue -> RGB
+        strip.setPixelColor(c, color); // Set pixel 'c' to value 'color'
+      }
+      strip.show();                // Update strip with new contents
+      delay(wait);                 // Pause for a moment
+      firstPixelHue += 65536 / 90; // One cycle of color wheel over 90 frames
+    }
+  }
 }
