@@ -138,6 +138,7 @@ const char HEADER[] PROGMEM = R"=====(
 *** contato@estudiohacker.io
 *** )=====";
 
+__attribute__((unused))
 static char* version_info() {
   static char title[100];
   sprintf(title, "%s (%s, %s) [ESP Core %s]\n",

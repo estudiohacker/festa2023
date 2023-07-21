@@ -6,8 +6,8 @@
 
 #define HOSTNAME_PREFIX "interfone"
 
-#define WIFI_SSID "I9"
-#define WIFI_PASSWORD "12345678"
+#define WIFI_SSID "interfone"
+#define WIFI_PASSWORD ""
 #define WIFI_CONNECTION_RETRIES 20
 
 #define MQTT_CONNECTION_RETRY 60000

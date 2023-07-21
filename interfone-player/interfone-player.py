@@ -1,23 +1,21 @@
 # python3.6
 
 import random
-import keyboard
 import vlc
 import time
 from paho.mqtt import client as mqtt_client
 # create a new instance of the media player
 player = vlc.MediaPlayer()
 player.set_fullscreen(True)
-keyboard.add_hotkey("Esc", lambda: player.stop())
 
 loop = True
-broker = '172.17.77.172'
+broker = '127.0.0.1'
 port = 1883
 topic = "interfone/+/sensor/chave/+"
 # Generate a Client ID with the subscribe prefix.
 client_id = f'subscribe-{random.randint(0, 100)}'
-username = 'quilombo'
-password = 'sesc'
+username = ''
+password = ''
 def connect_mqtt() -> mqtt_client:
     def on_connect(client, userdata, flags, rc):
         if rc == 0:

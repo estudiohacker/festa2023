@@ -3,9 +3,17 @@
 #include <PNGdec.h>
 #include "GifClass.h"
 
-#define PNG_FILENAME "/laroye.png"
-#define FILE_LAROYE "/laroye.gif"
-#define FILE_GLOBE "/ezgif.com-optimize.gif"
+#define GFX_BUTTON_1 16
+#define GFX_BUTTON_2 13 
+
+const char *gifFiles[] = {"/exu0.gif", "/exu1.gif", "/exu2.gif", "/exu3.gif", "/exu4.gif"};
+const int8_t maxGifFiles = 5;
+int8_t currentGifFileIdx = 0;
+
+const char *pngFiles[] = {"/exu0.png", "/exu1.png", "/exu2.png"};
+const int8_t maxPngFiles = 3;
+int8_t currentPngFileIdx = 0;
+
 
 Arduino_DataBus *busVSPI = new Arduino_ESP32SPI(21 /* DC */,  5 /* CS */, 18 /* SCK */, 23 /* MOSI */, GFX_NOT_DEFINED /* MISO */, VSPI /* spi_num */);
 Arduino_DataBus *busHSPI = new Arduino_ESP32SPI(25 /* DC */, 33 /* CS */, 14 /* SCK */, 27 /* MOSI */, GFX_NOT_DEFINED /* MISO */, HSPI /* spi_num */);
@@ -20,10 +28,14 @@ static GifClass gifClass;
 
 int16_t xOffsetPNG, yOffsetPNG;
 
+bool GFXButton1Pressed = false;
+bool GFXButton2Pressed = false;
+
+
 void *myOpen(const char *filename, int32_t *size) {
   pngFile = SPIFFS.open(filename, "r");
   if (!pngFile || pngFile.isDirectory()) {
-    Serial.println(F("ERROR: Failed to open " PNG_FILENAME " file for reading"));
+    Serial.println(F("ERROR: Failed to open file for reading"));
   } else {
     *size = pngFile.size();
   }
@@ -59,9 +71,9 @@ void PNGDraw(PNGDRAW *pDraw) {
   gfxPNG->draw16bitRGBBitmap(xOffsetPNG, yOffsetPNG + pDraw->y, usPixels, usMask, pDraw->iWidth, 1);
 }
 
-void showPNG() {
+void showPNG(const char *path) {
   int rc;
-  rc = png.open(PNG_FILENAME, myOpen, myClose, myRead, mySeek, PNGDraw);
+  rc = png.open(path, myOpen, myClose, myRead, mySeek, PNGDraw);
   if (rc == PNG_SUCCESS) {
     int16_t pw = png.getWidth();
     int16_t ph = png.getHeight();
@@ -76,8 +88,66 @@ void showPNG() {
   }
 }
 
-void playGif(Arduino_GFX *_gfx, const char *path) {
-  File gifFile = SPIFFS.open(path, "r");
+void handleGFXButton1(void * parameter) {
+  for(;;) {
+    if (digitalRead(GFX_BUTTON_1)) {
+      Serial.println("GFX_BUTTON_1 PRESSED");
+      GFXButton1Pressed = true;
+      currentGifFileIdx += 1;
+      if (currentGifFileIdx >= maxGifFiles) {
+        currentGifFileIdx = 0;
+      }
+      vTaskDelay(pdMS_TO_TICKS(500));
+    } else {
+      vTaskDelay(pdMS_TO_TICKS(10));
+    }    
+  }
+}
+
+void handleGFXButton2(void * parameter) {
+  for(;;) {
+    if (digitalRead(GFX_BUTTON_2)) {
+      Serial.println("GFX_BUTTON_2 PRESSED");
+      GFXButton2Pressed = true;
+      currentPngFileIdx += 1;
+      if (currentPngFileIdx >= maxPngFiles) {
+        currentPngFileIdx = 0;
+      }
+      vTaskDelay(pdMS_TO_TICKS(500));
+    } else {
+      vTaskDelay(pdMS_TO_TICKS(10));
+    }    
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(GFX_BUTTON_1, INPUT_PULLDOWN);
+  pinMode(GFX_BUTTON_2, INPUT_PULLDOWN);
+
+  xTaskCreate(handleGFXButton1, "handleGFXButton1", 1000, NULL, 1, NULL);
+  xTaskCreate(handleGFXButton2, "handleGFXButton2", 1000, NULL, 1, NULL);
+
+  if (!gfx->begin()) {
+    Serial.println("ERROR: gfx->begin() failed!");
+  }
+  gfx->fillScreen(WHITE);
+
+  if (!gfxPNG->begin()) {
+    Serial.println("ERROR: gfxPNG->begin() failed!");
+  }
+  gfxPNG->fillScreen(WHITE);
+
+  if (!SPIFFS.begin()) {
+    Serial.println(F("ERROR: file system mount failed!"));
+  }
+
+  showPNG(pngFiles[currentPngFileIdx]);
+}
+
+void loop() {
+  File gifFile = SPIFFS.open(gifFiles[currentGifFileIdx], "r");
   if (!gifFile || gifFile.isDirectory()) {
     Serial.println(F("ERROR: open gifFile Failed!"));
   } else {
@@ -90,20 +160,25 @@ void playGif(Arduino_GFX *_gfx, const char *path) {
       if (!buf) {
         Serial.println(F("buf malloc failed!"));
       } else {
-        int16_t x = (_gfx->width() - gif->width) / 2;
-        int16_t y = (_gfx->height() - gif->height) / 2;
+        int16_t x = (gfx->width() - gif->width) / 2;
+        int16_t y = (gfx->height() - gif->height) / 2;
 
         int32_t t_fstart, t_delay = 0, t_real_delay, delay_until;
         int32_t res = 1;
         int32_t duration = 0, remain = 0;
-        while (res > 0) {
+        while (res > 0 && !GFXButton1Pressed) {
+          if (GFXButton2Pressed) {
+            showPNG(pngFiles[currentPngFileIdx]);
+            GFXButton2Pressed = false;
+          }
+          
           t_fstart = millis();
           t_delay = gif->gce.delay * 10;
           res = gifClass.gd_get_frame(gif, buf);
           if (res < 0) {
             break;
           } else if (res > 0) {
-            _gfx->drawIndexedBitmap(x, y, buf, gif->palette->colors, gif->width, gif->height);
+            gfx->drawIndexedBitmap(x, y, buf, gif->palette->colors, gif->width, gif->height);
 
             t_real_delay = t_delay - (millis() - t_fstart);
             duration += t_delay;
@@ -114,33 +189,10 @@ void playGif(Arduino_GFX *_gfx, const char *path) {
             }
           }
         }
+        GFXButton1Pressed = false;
         gifClass.gd_close_gif(gif);
         free(buf);
       }
     }
   }
-}
-
-void setup() {
-  Serial.begin(115200);
-
-  if (!gfx->begin()) {
-    Serial.println("gfx->begin() failed!");
-  }
-  gfx->fillScreen(WHITE);
-
-  if (!gfxPNG->begin()) {
-    Serial.println("gfxPNG->begin() failed!");
-  }
-  gfxPNG->fillScreen(WHITE);
-
-  if (!SPIFFS.begin()) {
-    Serial.println(F("ERROR: file system mount failed!"));
-  }
-}
-
-void loop() {
-  showPNG();
-  playGif(gfx, FILE_GLOBE);
-  playGif(gfxPNG, FILE_LAROYE);
 }
